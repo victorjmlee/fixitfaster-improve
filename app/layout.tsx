@@ -4,7 +4,7 @@ import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Fix It Faster",
-  description: "Datadog 트러블슈팅 경연대회",
+  description: "Datadog troubleshooting competition",
 };
 
 export default function RootLayout({
@@ -13,7 +13,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ko">
+    <html lang="en">
       <body className="antialiased">
         <header className="border-b border-[var(--border)] bg-[var(--card)]/80 backdrop-blur">
           <div className="mx-auto flex h-14 max-w-4xl items-center justify-between px-4">
@@ -21,9 +21,9 @@ export default function RootLayout({
               Fix It Faster
             </Link>
             <nav className="flex gap-6 text-sm text-zinc-400">
-              <Link href="/" className="hover:text-white">챌린지</Link>
-              <Link href="/leaderboard" className="hover:text-white">리더보드</Link>
-              <Link href="/setup" className="hover:text-white">설정</Link>
+              <Link href="/" className="hover:text-white">Challenges</Link>
+              <Link href="/leaderboard" className="hover:text-white">Leaderboard</Link>
+              <Link href="/setup" className="hover:text-white">Setup</Link>
             </nav>
           </div>
         </header>

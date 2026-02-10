@@ -30,7 +30,7 @@ export default function HomePage() {
   if (loading) {
     return (
       <div className="flex justify-center py-16">
-        <span className="text-zinc-500">로딩 중...</span>
+        <span className="text-zinc-500">Loading...</span>
       </div>
     );
   }
@@ -38,24 +38,24 @@ export default function HomePage() {
   return (
     <div className="space-y-8">
       <div className="flex flex-col gap-2">
-        <h1 className="text-2xl font-bold">챌린지 목록</h1>
+        <h1 className="text-2xl font-bold">Challenges</h1>
         <p className="text-zinc-400 text-sm">
-          챌린지를 선택하면 타이머가 시작됩니다. 해결 후 제출하면 리더보드에 반영됩니다.
+          Pick a challenge to start the timer. Submit when done to appear on the leaderboard.
         </p>
         {datadogOk === true && (
-          <p className="text-emerald-500/90 text-sm">✓ Datadog 연결됨</p>
+          <p className="text-emerald-500/90 text-sm">✓ Datadog connected</p>
         )}
         {datadogOk === false && (
           <p className="text-amber-500/90 text-sm">
-            Datadog API 키가 없거나 유효하지 않습니다.{" "}
-            <Link href="/setup" className="underline">설정</Link>에서 .env.local을 확인하세요.
+            Datadog API key is missing or invalid. Check .env.local in{" "}
+            <Link href="/setup" className="underline">Setup</Link>.
           </p>
         )}
       </div>
 
       {challenges.length === 0 ? (
         <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-8 text-center text-zinc-500">
-          등록된 챌린지가 없습니다. <code className="text-zinc-400">challenges/</code> 폴더에 .md 파일을 추가하세요.
+          No challenges yet. Add .md files to the <code className="text-zinc-400">challenges/</code> folder.
         </div>
       ) : (
         <ul className="grid gap-4">
@@ -72,7 +72,7 @@ export default function HomePage() {
                       {c.difficulty} · {c.estimatedMinutes} · {c.products}
                     </p>
                   </div>
-                  <span className="shrink-0 text-[var(--accent)]">시작 →</span>
+                  <span className="shrink-0 text-[var(--accent)]">Start →</span>
                 </div>
               </Link>
             </li>
@@ -81,14 +81,14 @@ export default function HomePage() {
       )}
 
       <div className="rounded-lg border border-[var(--border)] bg-[var(--card)]/50 p-4 text-sm text-zinc-500">
-        <strong className="text-zinc-400">리소스:</strong>{" "}
+        <strong className="text-zinc-400">Resources:</strong>{" "}
         <a
           href="https://docs.datadoghq.com"
           target="_blank"
           rel="noopener noreferrer"
           className="text-[var(--accent)] hover:underline"
         >
-          Datadog 공식 문서
+          Datadog Documentation
         </a>
         {" · "}
         <a

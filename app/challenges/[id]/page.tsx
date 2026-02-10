@@ -64,7 +64,7 @@ export default function ChallengePage() {
     const docLinks = (form.elements.namedItem("docLinks") as HTMLTextAreaElement)?.value ?? "";
 
     if (!participantName) {
-      alert("이름을 입력하세요.");
+      alert("Please enter your name.");
       return;
     }
 
@@ -87,10 +87,10 @@ export default function ChallengePage() {
         setTimeout(() => router.push("/leaderboard"), 2000);
       } else {
         const data = await res.json();
-        alert(data.error || "제출 실패");
+        alert(data.error || "Submission failed");
       }
     } catch {
-      alert("제출 중 오류가 났습니다.");
+      alert("An error occurred while submitting.");
     } finally {
       setSubmitting(false);
     }
@@ -99,7 +99,7 @@ export default function ChallengePage() {
   if (loading || !challenge) {
     return (
       <div className="flex justify-center py-16">
-        <span className="text-zinc-500">{loading ? "로딩 중..." : "챌린지를 찾을 수 없습니다."}</span>
+        <span className="text-zinc-500">{loading ? "Loading..." : "Challenge not found."}</span>
       </div>
     );
   }
@@ -115,61 +115,61 @@ export default function ChallengePage() {
 
       {!started ? (
         <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-6 text-center">
-          <p className="text-zinc-400">챌린지 내용을 읽은 뒤 시작하면 타이머가 돌아갑니다.</p>
+          <p className="text-zinc-400">Read the challenge, then start to run the timer.</p>
           <button
             type="button"
             onClick={handleStart}
             className="mt-4 rounded-lg bg-[var(--accent)] px-6 py-3 font-medium text-[var(--bg)] hover:opacity-90"
           >
-            시작하기
+            Start
           </button>
         </div>
       ) : (
         <div className="sticky top-2 z-10 flex items-center justify-between rounded-lg border border-[var(--border)] bg-[var(--card)] px-4 py-3">
           <span className="font-mono text-lg text-[var(--accent)]">{formatTime(elapsed)}</span>
-          <span className="text-sm text-zinc-500">경과 시간</span>
+          <span className="text-sm text-zinc-500">Elapsed</span>
         </div>
       )}
 
       <div className="prose prose-invert prose-sm max-w-none">
         <section className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-5">
-          <h2 className="mb-2 text-base font-semibold text-white">증상 요약</h2>
+          <h2 className="mb-2 text-base font-semibold text-white">Symptom summary</h2>
           <div className="whitespace-pre-wrap text-zinc-300 text-sm">{challenge.symptomSummary || "-"}</div>
         </section>
         <section className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-5">
-          <h2 className="mb-2 text-base font-semibold text-white">재현 단계 / 관찰 가능한 현상</h2>
+          <h2 className="mb-2 text-base font-semibold text-white">Steps to reproduce / What to observe</h2>
           <div className="whitespace-pre-wrap text-zinc-300 text-sm">{challenge.steps || "-"}</div>
         </section>
         <section className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-5">
-          <h2 className="mb-2 text-base font-semibold text-white">허용 리소스</h2>
+          <h2 className="mb-2 text-base font-semibold text-white">Allowed resources</h2>
           <div className="whitespace-pre-wrap text-zinc-300 text-sm">{challenge.allowedResources || "-"}</div>
         </section>
       </div>
 
       {started && (
         <form onSubmit={handleSubmit} className="space-y-4 rounded-xl border border-[var(--border)] bg-[var(--card)] p-5">
-          <h2 className="text-base font-semibold text-white">제출</h2>
+          <h2 className="text-base font-semibold text-white">Submit</h2>
           <div>
-            <label className="block text-sm text-zinc-400">이름 (필수)</label>
+            <label className="block text-sm text-zinc-400">Name (required)</label>
             <input
               name="participantName"
               type="text"
               required
               className="mt-1 w-full rounded border border-[var(--border)] bg-[var(--bg)] px-3 py-2 text-white placeholder-zinc-600"
-              placeholder="홍길동"
+              placeholder="Your name"
             />
           </div>
           <div>
-            <label className="block text-sm text-zinc-400">원인 요약</label>
+            <label className="block text-sm text-zinc-400">Root cause summary</label>
             <textarea
               name="causeSummary"
               rows={3}
               className="mt-1 w-full rounded border border-[var(--border)] bg-[var(--bg)] px-3 py-2 text-white placeholder-zinc-600"
-              placeholder="근본 원인을 한 문단으로..."
+              placeholder="Summarize the root cause in a short paragraph..."
             />
           </div>
           <div>
-            <label className="block text-sm text-zinc-400">해결 단계</label>
+            <label className="block text-sm text-zinc-400">Resolution steps</label>
             <textarea
               name="steps"
               rows={4}
@@ -178,7 +178,7 @@ export default function ChallengePage() {
             />
           </div>
           <div>
-            <label className="block text-sm text-zinc-400">참고한 문서/링크</label>
+            <label className="block text-sm text-zinc-400">Documentation / links used</label>
             <textarea
               name="docLinks"
               rows={2}
@@ -192,9 +192,9 @@ export default function ChallengePage() {
               disabled={submitting || submitOk}
               className="rounded-lg bg-[var(--accent)] px-5 py-2 font-medium text-[var(--bg)] hover:opacity-90 disabled:opacity-50"
             >
-              {submitOk ? "제출 완료 → 리더보드로 이동" : submitting ? "제출 중..." : `제출 (${formatTime(elapsed)})`}
+              {submitOk ? "Submitted → Going to leaderboard" : submitting ? "Submitting..." : `Submit (${formatTime(elapsed)})`}
             </button>
-            <span className="text-sm text-zinc-500">소요 시간이 함께 기록됩니다.</span>
+            <span className="text-sm text-zinc-500">Elapsed time will be recorded.</span>
           </div>
         </form>
       )}
