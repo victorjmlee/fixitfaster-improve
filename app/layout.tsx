@@ -6,6 +6,9 @@ import Header from "./Header";
 export const metadata: Metadata = {
   title: "Fix It Faster - Leaderboard",
   description: "Datadog troubleshooting competition",
+  icons: {
+    icon: "https://www.datadoghq.com/favicon.ico",
+  },
 };
 
 export default function RootLayout({
