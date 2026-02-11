@@ -14,23 +14,39 @@ type ChallengeMeta = {
 export default function HomePage() {
   const [challenges, setChallenges] = useState<ChallengeMeta[]>([]);
   const [loading, setLoading] = useState(true);
-  const [datadogOk, setDatadogOk] = useState<boolean | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    Promise.all([
-      fetch("/api/challenges").then((r) => r.json()),
-      fetch("/api/validate").then((r) => r.json()).catch(() => ({ valid: false })),
-    ]).then(([list, validation]) => {
-      setChallenges(Array.isArray(list) ? list : []);
-      setDatadogOk(validation.valid === true);
-      setLoading(false);
-    });
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 15000);
+    fetch("/api/challenges", { signal: ctrl.signal })
+      .then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
+      .then((list) => setChallenges(Array.isArray(list) ? list : []))
+      .catch((e) => setError(e?.message || "Failed to load challenges."))
+      .finally(() => {
+        clearTimeout(t);
+        setLoading(false);
+      });
   }, []);
 
-  if (loading) {
+  if (loading && !error) {
     return (
       <div className="flex justify-center py-16">
         <span className="text-zinc-500">Loading...</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="rounded-xl border border-amber-500/50 bg-amber-500/10 p-6 text-center">
+        <p className="font-medium text-amber-200">{error}</p>
+        <p className="mt-2 text-sm text-zinc-500">
+          Check the <code>/api/challenges</code> request in F12 → Network.
+        </p>
       </div>
     );
   }
@@ -42,15 +58,6 @@ export default function HomePage() {
         <p className="text-zinc-400 text-sm">
           Pick a challenge to start the timer. Submit when done to appear on the leaderboard.
         </p>
-        {datadogOk === true && (
-          <p className="text-emerald-500/90 text-sm">✓ Datadog connected</p>
-        )}
-        {datadogOk === false && (
-          <p className="text-amber-500/90 text-sm">
-            Datadog API key is missing or invalid. Check .env.local in{" "}
-            <Link href="/setup" className="underline">Setup</Link>.
-          </p>
-        )}
       </div>
 
       {challenges.length === 0 ? (
@@ -82,21 +89,11 @@ export default function HomePage() {
 
       <div className="rounded-lg border border-[var(--border)] bg-[var(--card)]/50 p-4 text-sm text-zinc-500">
         <strong className="text-zinc-400">Resources:</strong>{" "}
-        <a
-          href="https://docs.datadoghq.com"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-[var(--accent)] hover:underline"
-        >
+        <a href="https://docs.datadoghq.com" target="_blank" rel="noopener noreferrer" className="text-[var(--accent)] hover:underline">
           Datadog Documentation
         </a>
         {" · "}
-        <a
-          href="https://docs.datadoghq.com/agent/troubleshooting"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-[var(--accent)] hover:underline"
-        >
+        <a href="https://docs.datadoghq.com/agent/troubleshooting/" target="_blank" rel="noopener noreferrer" className="text-[var(--accent)] hover:underline">
           Agent Troubleshooting
         </a>
       </div>

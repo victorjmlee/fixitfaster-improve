@@ -15,7 +15,6 @@ export type Submission = {
 const DATA_DIR = path.join(process.cwd(), "data");
 const SUBMISSIONS_FILE = path.join(DATA_DIR, "submissions.json");
 
-// Vercel 등 서버리스에서는 파일 쓰기 불가 → 메모리 폴백 (인스턴스 재시작 시 초기화됨)
 let memoryFallback: Submission[] | null = null;
 
 function ensureDataDir() {

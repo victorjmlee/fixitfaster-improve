@@ -20,7 +20,7 @@ export async function POST(req: Request) {
       elapsedSeconds < 0
     ) {
       return NextResponse.json(
-        { error: "challengeId, participantName, elapsedSeconds(숫자)는 필수입니다." },
+        { error: "challengeId, participantName, and elapsedSeconds (number) are required." },
         { status: 400 }
       );
     }
@@ -35,7 +35,7 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json(submission);
-  } catch (e) {
+  } catch {
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
 }

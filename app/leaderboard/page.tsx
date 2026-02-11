@@ -31,6 +31,12 @@ export default function LeaderboardPage() {
       .finally(() => setLoading(false));
   }, []);
 
+  const handleReset = async () => {
+    if (!confirm("Clear the entire leaderboard?")) return;
+    await fetch("/api/reset-leaderboard", { method: "POST" });
+    setList([]);
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center py-16">
@@ -38,12 +44,6 @@ export default function LeaderboardPage() {
       </div>
     );
   }
-
-  const handleReset = async () => {
-    if (!confirm("Clear the entire leaderboard?")) return;
-    await fetch("/api/reset-leaderboard", { method: "POST" });
-    setList([]);
-  };
 
   return (
     <div className="space-y-8">
@@ -93,9 +93,7 @@ export default function LeaderboardPage() {
                     </Link>
                   </td>
                   <td className="p-3 font-mono text-[var(--accent)]">{formatTime(s.elapsedSeconds)}</td>
-                  <td className="p-3 text-zinc-500">
-                    {new Date(s.submittedAt).toLocaleString("en-US")}
-                  </td>
+                  <td className="p-3 text-zinc-500">{new Date(s.submittedAt).toLocaleString("en-US")}</td>
                 </tr>
               ))}
             </tbody>

@@ -15,9 +15,19 @@ export type Challenge = ChallengeMeta & {
   environment: string;
   steps: string;
   allowedResources: string;
+  helpfulCommands: string;
 };
 
 const CHALLENGES_DIR = path.join(process.cwd(), "challenges");
+
+const CHALLENGE_ORDER = [
+  "scenario-infra",
+  "scenario-autodiscovery",
+  "scenario-apm",
+  "scenario-correlation",
+  "scenario-custom-metrics",
+  "scenario-log-timezone",
+];
 
 function extractSection(content: string, title: string): string {
   const regex = new RegExp(`## ${title}\\s*\\n([\\s\\S]*?)(?=\\n## |$)`, "i");
@@ -29,21 +39,17 @@ function parseChallenge(id: string, raw: string): Challenge {
   const body = raw;
   const titleMatch = raw.match(/^#\s+(.+?)(?:\n|$)/);
   const title = titleMatch ? titleMatch[1].trim() : id;
-
   const metaBlock = raw.match(/\*\*Difficulty:\*\*\s*(.+?)(?:\n|$)/i);
   const difficulty = metaBlock ? metaBlock[1].trim() : "";
-
   const estMatch = raw.match(/\*\*Estimated time:\*\*\s*(.+?)(?:\n|$)/i);
   const estimatedMinutes = estMatch ? estMatch[1].trim() : "";
-
   const prodMatch = raw.match(/\*\*Related Datadog products:\*\*\s*(.+?)(?:\n|$)/i);
   const products = prodMatch ? prodMatch[1].trim() : "";
-
   const symptomSummary = extractSection(raw, "Symptom summary");
   const environment = extractSection(raw, "Environment");
   const steps = extractSection(raw, "Steps to reproduce / What to observe");
   const allowedResources = extractSection(raw, "Allowed resources");
-
+  const helpfulCommands = extractSection(raw, "Helpful Commands");
   return {
     id,
     title,
@@ -55,12 +61,19 @@ function parseChallenge(id: string, raw: string): Challenge {
     environment,
     steps,
     allowedResources,
+    helpfulCommands,
   };
 }
 
 export function listChallenges(): ChallengeMeta[] {
   if (!fs.existsSync(CHALLENGES_DIR)) return [];
-  const files = fs.readdirSync(CHALLENGES_DIR);
+  let files: string[];
+  try {
+    if (!fs.existsSync(CHALLENGES_DIR)) return [];
+    files = fs.readdirSync(CHALLENGES_DIR);
+  } catch {
+    return [];
+  }
   const list: ChallengeMeta[] = [];
   for (const f of files) {
     if (!f.endsWith(".md") || f.startsWith("_")) continue;
@@ -79,7 +92,13 @@ export function listChallenges(): ChallengeMeta[] {
       // skip invalid
     }
   }
-  return list;
+  const ordered = list.filter((c) => CHALLENGE_ORDER.includes(c.id));
+  ordered.sort((a, b) => {
+    const ia = CHALLENGE_ORDER.indexOf(a.id);
+    const ib = CHALLENGE_ORDER.indexOf(b.id);
+    return ia - ib;
+  });
+  return ordered;
 }
 
 export function getChallenge(id: string): Challenge | null {

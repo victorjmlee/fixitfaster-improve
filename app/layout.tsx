@@ -3,15 +3,13 @@ import "./globals.css";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Fix It Faster",
+  title: "Fix It Faster - Leaderboard",
   description: "Datadog troubleshooting competition",
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+}: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
       <body className="antialiased">
@@ -23,7 +21,6 @@ export default function RootLayout({
             <nav className="flex gap-6 text-sm text-zinc-400">
               <Link href="/" className="hover:text-white">Challenges</Link>
               <Link href="/leaderboard" className="hover:text-white">Leaderboard</Link>
-              <Link href="/setup" className="hover:text-white">Setup</Link>
             </nav>
           </div>
         </header>

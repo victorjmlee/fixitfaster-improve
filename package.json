@@ -1,25 +1,15 @@
 {
-  "name": "fixitfaster",
+  "name": "fixitfaster-leaderboard",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "npx next dev",
-    "dev:lan": "npx next dev -H 0.0.0.0",
     "build": "npx next build",
     "start": "node scripts/start-server.js",
     "lint": "npx next lint",
-    "agent:up": "cd agent && npm run up",
-    "agent:down": "cd agent && npm run down",
-    "agent:logs": "cd agent && npm run logs",
-    "pipeline:setup": "cd agent && npm run pipeline:setup",
-    "pipeline:setup:py": "cd agent && npm run pipeline:setup:py",
-    "agent:up:full": "cd agent && npm run up:full",
-    "leaderboard:reset": "node scripts/reset-leaderboard.cjs",
-    "up": "npm run agent:up && npm run dev"
+    "deploy": "./scripts/deploy-eb.sh"
   },
   "dependencies": {
-    "dd-trace": "^5.8.0",
-    "dotenv": "^16.4.5",
     "next": "14.2.35",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"

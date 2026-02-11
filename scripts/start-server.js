@@ -1,13 +1,11 @@
 #!/usr/bin/env node
-/**
- * Elastic Beanstalk 등에서 PORT 환경변수를 쓰기 위한 Next.js 시작 스크립트.
- * 로컬에서는 PORT가 없으면 3000 사용.
- */
 const { spawnSync } = require("child_process");
+// EB proxy forwards to 5000 by default; local dev typically uses 3000
 const port = process.env.PORT || "3000";
+const env = { ...process.env, NODE_ENV: "production" };
 const result = spawnSync(
   "npx",
-  ["next", "start", "-p", port],
-  { stdio: "inherit", env: process.env }
+  ["next", "start", "-p", port, "-H", "0.0.0.0"],
+  { stdio: "inherit", env, cwd: process.cwd() }
 );
-process.exit(result.status || 0);
+process.exit(result.status ?? 1);

@@ -2,8 +2,9 @@
 # 로컬에서 빌드한 뒤 .next 포함해서 EB에 배포 (서버에서는 npm run build 안 함)
 set -e
 
+# Repo root = leaderboard app root
 LEADERBOARD_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-REPO_ROOT="$(cd "$LEADERBOARD_ROOT/.." && pwd)"
+REPO_ROOT="$LEADERBOARD_ROOT"
 CONFIG="$REPO_ROOT/.elasticbeanstalk/config.yml"
 
 # 프로필/리전: 인자(region) > AWS_REGION > eb status > config
@@ -18,7 +19,7 @@ VERSION_LABEL="leaderboard-$(date +%Y%m%d-%H%M%S)"
 ZIP_NAME="deploy-${VERSION_LABEL}.zip"
 
 if [[ ! -f "$CONFIG" ]]; then
-  echo "ERROR: $CONFIG not found. Run this script from leaderboard/ (fixitfaster/leaderboard)." >&2
+  echo "ERROR: $CONFIG not found. Run from repo root: npm run deploy" >&2
   exit 1
 fi
 
@@ -49,7 +50,7 @@ if [[ -z "$APP_NAME" ]]; then
 fi
 echo "==> Target: app=$APP_NAME env=$ENV_NAME region=$REGION"
 
-echo "==> Build (leaderboard)"
+echo "==> Build"
 cd "$LEADERBOARD_ROOT"
 npm run build
 
