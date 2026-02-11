@@ -11,7 +11,14 @@ export type GradeOutcome =
   | { success: false; reason: GradeSkipReason };
 
 function buildPrompt(ref: { rootCause: string; resolution: string }, causeSummary: string, steps: string): string {
-  return `You are a grader for a troubleshooting challenge. Compare the participant's answer to the reference answer and give a score from 0 to 100.
+  return `You are a strict grader for a troubleshooting challenge. Compare the participant's answer to the reference and give a score from 0 to 100.
+
+Grading criteria (be strict):
+- 0–25: Wrong or missing root cause; resolution unrelated or absent.
+- 26–50: Root cause only vaguely or partially correct; resolution incomplete or incorrect.
+- 51–70: Root cause roughly correct but key details missing; resolution partly correct.
+- 71–85: Root cause and resolution mostly correct with minor gaps.
+- 86–100: Root cause and resolution clearly match the reference (specific terms, steps, and intent). Use sparingly.
 
 Reference answer (Korean):
 - Root cause: ${ref.rootCause}
@@ -26,8 +33,8 @@ Line 1: A single integer from 0 to 100 (the score). No other text.
 Line 2: Optional one-line feedback in Korean (what was good or missing). If none, write "-"
 
 Example:
-85
-원인(호스트명)을 정확히 짚었고, 해결 단계도 적절함.`;
+62
+원인은 비슷하나 호스트명 등 구체적 표현 부족. 해결 단계는 일부만 맞음.`;
 }
 
 function parseScoreFromText(text: string): { score: number; feedback?: string } {
