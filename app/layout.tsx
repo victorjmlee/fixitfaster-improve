@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import Link from "next/link";
+import { LocaleProvider } from "./LocaleContext";
+import Header from "./Header";
 
 export const metadata: Metadata = {
   title: "Fix It Faster - Leaderboard",
@@ -13,18 +14,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="antialiased">
-        <header className="border-b border-[var(--border)] bg-[var(--card)]/80 backdrop-blur">
-          <div className="mx-auto flex h-14 max-w-4xl items-center justify-between px-4">
-            <Link href="/" className="font-semibold text-[var(--accent)]">
-              Fix It Faster
-            </Link>
-            <nav className="flex gap-6 text-sm text-zinc-400">
-              <Link href="/" className="hover:text-white">Challenges</Link>
-              <Link href="/leaderboard" className="hover:text-white">Leaderboard</Link>
-            </nav>
-          </div>
-        </header>
-        <main className="mx-auto max-w-4xl px-4 py-8">{children}</main>
+        <LocaleProvider>
+          <Header />
+          <main className="mx-auto max-w-4xl px-4 py-8">{children}</main>
+        </LocaleProvider>
       </body>
     </html>
   );

@@ -2,6 +2,9 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useLocale } from "@/app/LocaleContext";
+
+const PARTICIPANT_NAME_KEY = "fixitfaster-participant-name";
 
 type ChallengeMeta = {
   id: string;
@@ -12,7 +15,9 @@ type ChallengeMeta = {
 };
 
 export default function HomePage() {
+  const { t } = useLocale();
   const [challenges, setChallenges] = useState<ChallengeMeta[]>([]);
+  const [completedIds, setCompletedIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -32,10 +37,26 @@ export default function HomePage() {
       });
   }, []);
 
+  useEffect(() => {
+    try {
+      const name = typeof window !== "undefined" ? localStorage.getItem(PARTICIPANT_NAME_KEY) : null;
+      if (!name) {
+        setCompletedIds(new Set());
+        return;
+      }
+      fetch(`/api/my-submissions?participantName=${encodeURIComponent(name)}`)
+        .then((r) => r.json())
+        .then((data) => setCompletedIds(new Set(Array.isArray(data.challengeIds) ? data.challengeIds : [])))
+        .catch(() => setCompletedIds(new Set()));
+    } catch {
+      setCompletedIds(new Set());
+    }
+  }, []);
+
   if (loading && !error) {
     return (
       <div className="flex justify-center py-16">
-        <span className="text-zinc-500">Loading...</span>
+        <span className="text-zinc-500">{t("home.loading")}</span>
       </div>
     );
   }
@@ -44,9 +65,7 @@ export default function HomePage() {
     return (
       <div className="rounded-xl border border-amber-500/50 bg-amber-500/10 p-6 text-center">
         <p className="font-medium text-amber-200">{error}</p>
-        <p className="mt-2 text-sm text-zinc-500">
-          Check the <code>/api/challenges</code> request in F12 → Network.
-        </p>
+        <p className="mt-2 text-sm text-zinc-500">{t("home.errorHint")}</p>
       </div>
     );
   }
@@ -54,47 +73,65 @@ export default function HomePage() {
   return (
     <div className="space-y-8">
       <div className="flex flex-col gap-2">
-        <h1 className="text-2xl font-bold">Challenges</h1>
-        <p className="text-zinc-400 text-sm">
-          Pick a challenge to start the timer. Submit when done to appear on the leaderboard.
-        </p>
+        <h1 className="text-2xl font-bold">{t("home.title")}</h1>
+        <p className="text-zinc-400 text-sm">{t("home.subtitle")}</p>
       </div>
 
       {challenges.length === 0 ? (
         <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-8 text-center text-zinc-500">
-          No challenges yet. Add .md files to the <code className="text-zinc-400">challenges/</code> folder.
+          {t("home.noChallenges")}
         </div>
       ) : (
         <ul className="grid gap-4">
-          {challenges.map((c) => (
-            <li key={c.id}>
-              <Link
-                href={`/challenges/${c.id}`}
-                className="block rounded-xl border border-[var(--border)] bg-[var(--card)] p-5 transition hover:border-[var(--accent-dim)] hover:bg-[var(--card)]/90"
-              >
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <h2 className="font-semibold text-white">{c.title}</h2>
-                    <p className="mt-1 text-sm text-zinc-500">
-                      {c.difficulty} · {c.estimatedMinutes} · {c.products}
-                    </p>
+          {challenges.map((c) => {
+            const completed = completedIds.has(c.id);
+            return (
+              <li key={c.id}>
+                <Link
+                  href={`/challenges/${c.id}`}
+                  className="block rounded-xl border border-[var(--border)] bg-[var(--card)] p-5 transition hover:border-[var(--accent-dim)] hover:bg-[var(--card)]/90"
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex items-start gap-3 min-w-0">
+                      <span
+                        className="shrink-0 mt-0.5 flex h-5 w-5 items-center justify-center rounded border border-[var(--border)]"
+                        aria-hidden
+                      >
+                        {completed ? (
+                          <span className="text-[var(--accent)]" title={t("home.submitted")}>✓</span>
+                        ) : (
+                          <span className="w-2 h-2 rounded-full bg-transparent" />
+                        )}
+                      </span>
+                      <div className="min-w-0">
+                        <h2 className="font-semibold text-white">
+                          {t(`scenario.${c.id}`).startsWith("scenario.") ? c.title : t(`scenario.${c.id}`)}
+                        </h2>
+                        <p className="mt-1 text-sm text-zinc-500">
+                          {c.difficulty} · {c.estimatedMinutes} · {c.products}
+                          {completed && (
+                            <span className="ml-2 text-[var(--accent)]">· {t("home.submitted")}</span>
+                          )}
+                        </p>
+                      </div>
+                    </div>
+                    <span className="shrink-0 text-[var(--accent)]">{t("home.start")} →</span>
                   </div>
-                  <span className="shrink-0 text-[var(--accent)]">Start →</span>
-                </div>
-              </Link>
-            </li>
-          ))}
+                </Link>
+              </li>
+            );
+          })}
         </ul>
       )}
 
       <div className="rounded-lg border border-[var(--border)] bg-[var(--card)]/50 p-4 text-sm text-zinc-500">
-        <strong className="text-zinc-400">Resources:</strong>{" "}
+        <strong className="text-zinc-400">{t("home.resources")}</strong>{" "}
         <a href="https://docs.datadoghq.com" target="_blank" rel="noopener noreferrer" className="text-[var(--accent)] hover:underline">
-          Datadog Documentation
+          {t("home.docDocs")}
         </a>
         {" · "}
         <a href="https://docs.datadoghq.com/agent/troubleshooting/" target="_blank" rel="noopener noreferrer" className="text-[var(--accent)] hover:underline">
-          Agent Troubleshooting
+          {t("home.agentTroubleshooting")}
         </a>
       </div>
     </div>

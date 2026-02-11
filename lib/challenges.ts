@@ -101,9 +101,15 @@ export function listChallenges(): ChallengeMeta[] {
   return ordered;
 }
 
-export function getChallenge(id: string): Challenge | null {
+export type ChallengeLocale = "en" | "ko";
+
+export function getChallenge(id: string, locale: ChallengeLocale = "en"): Challenge | null {
   const safeId = path.basename(id).replace(/\.md$/, "");
-  const filePath = path.join(CHALLENGES_DIR, `${safeId}.md`);
+  let filePath = path.join(CHALLENGES_DIR, `${safeId}.md`);
+  if (locale === "ko") {
+    const koPath = path.join(CHALLENGES_DIR, "ko", `${safeId}.md`);
+    if (fs.existsSync(koPath)) filePath = koPath;
+  }
   if (!fs.existsSync(filePath)) return null;
   const raw = fs.readFileSync(filePath, "utf-8");
   return parseChallenge(safeId, raw);

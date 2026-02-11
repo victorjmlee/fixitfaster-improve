@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
-import { getLeaderboard } from "@/lib/store";
+import { getLeaderboard, getLeaderboardAggregated } from "@/lib/store";
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const challengeId = searchParams.get("challengeId") || undefined;
-  const list = getLeaderboard(challengeId);
+  // 기본: 참가자별 합산 등수. challengeId 있으면 해당 챌린지 제출 목록.
+  const list = challengeId ? getLeaderboard(challengeId) : getLeaderboardAggregated();
   return NextResponse.json(list);
 }

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { addSubmission } from "@/lib/store";
+import { addSubmission, updateSubmission } from "@/lib/store";
+import { gradeSubmission } from "@/lib/gemini-grade";
 
 export async function POST(req: Request) {
   try {
@@ -7,6 +8,7 @@ export async function POST(req: Request) {
     const {
       challengeId,
       participantName,
+      solution,
       causeSummary,
       steps,
       docLinks,
@@ -25,16 +27,44 @@ export async function POST(req: Request) {
       );
     }
 
+    const text = typeof solution === "string" && solution.trim() !== ""
+      ? solution.trim()
+      : "";
+    const cause = typeof causeSummary === "string" ? causeSummary : text;
+    const step = typeof steps === "string" ? steps : text;
+
     const submission = addSubmission({
       challengeId: String(challengeId),
       participantName: String(participantName).trim(),
-      causeSummary: String(causeSummary ?? ""),
-      steps: String(steps ?? ""),
+      causeSummary: cause || text,
+      steps: step || text,
       docLinks: String(docLinks ?? ""),
       elapsedSeconds: Math.floor(Number(elapsedSeconds)),
     });
 
-    return NextResponse.json(submission);
+    const grade = await gradeSubmission(
+      submission.challengeId,
+      submission.causeSummary,
+      submission.steps
+    );
+    if (grade.success) {
+      updateSubmission(submission.id, { score: grade.score });
+      submission.score = grade.score;
+      return NextResponse.json(submission);
+    }
+    const hintByReason: Record<string, string> = {
+      no_key: "GEMINI_API_KEY를 .env.local 또는 Vercel 환경변수에 설정하면 채점이 가능합니다.",
+      no_ref: "해당 챌린지의 참조 답변이 없어 채점을 건너뜁니다.",
+      quota:
+        "Gemini API 무료 한도를 초과했습니다. 결제/플랜 확인: https://ai.google.dev/gemini-api",
+      api_error: "Gemini API 오류로 채점을 건너뜁니다. 서버 로그를 확인하세요.",
+    };
+    return NextResponse.json({
+      ...submission,
+      _gradingSkipped: true,
+      _gradingHint: hintByReason[grade.reason] ?? grade.reason,
+      _gradingReason: grade.reason,
+    });
   } catch {
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }

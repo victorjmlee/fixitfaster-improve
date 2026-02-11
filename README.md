@@ -18,6 +18,7 @@ Open http://localhost:3000
 3. **Root Directory**: leave blank (repo root is the app).
 4. **Framework**: Next.js. Build: `npm run build`, Install: `npm install`.
 5. **Deploy**. Future pushes to `main` trigger automatic redeploys.
+6. **(Optional) Auto-grading with Gemini:** In Vercel → Project → Settings → Environment Variables, add `GEMINI_API_KEY` with a key from [Google AI Studio](https://aistudio.google.com/app/apikey). Submissions will be scored 0–100 and the leaderboard will rank by score then time. If not set, ranking is by time only.
 
 **CLI one-off deploy:**
 
