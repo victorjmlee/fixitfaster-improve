@@ -11,7 +11,7 @@ export type GradeOutcome =
   | { success: false; reason: GradeSkipReason };
 
 function buildPrompt(
-  ref: { rootCause: string; resolution: string },
+  ref: { rootCause: string; resolution: string; expectedChange: string },
   causeSummary: string,
   steps: string,
   artifacts?: string | null
@@ -31,23 +31,24 @@ ${artifacts.slice(0, 15000)}
   const gradeFromArtifactsOnly =
     textEmpty && artifactsBlock
       ? `
-IMPORTANT: Participant did not write a text answer. Grade ONLY from the artifacts (config/diff) below.
-- If the artifacts show the correct fix (docker-compose, conf.d, or code changes matching the reference resolution), give 51–100. Do NOT give 0.
-- Give 0 only if artifacts are empty, show the wrong fix, or are unrelated to the reference.
-- Match the reference "Resolution" against what was actually changed in the diff/config.
+IMPORTANT: Participant did not write a text answer. Grade ONLY from the artifacts (git diff, docker-compose, conf.d) below.
+- Compare artifacts to "Expected change" below. If the diff/config SHOWS that change (correct file, correct value), give 71–100. Do NOT give 0.
+- Give 51–70 if the right file is changed but detail slightly off; give 0 only if wrong file, wrong fix, or no relevant change.
 `
       : "";
 
-  return `You are a strict grader for a troubleshooting challenge. Compare the participant's answer to the reference and give a score from 0 to 100.
+  return `You are a strict grader for a troubleshooting challenge. Compare the participant's artifacts to the expected change and give a score from 0 to 100.
 ${gradeFromArtifactsOnly}
-Grading criteria (be strict):
-- 0–25: Wrong or missing root cause; resolution unrelated or absent. With artifacts only: give 0 only if artifacts show wrong/no fix or are irrelevant.
-- 26–50: Root cause only vaguely or partially correct; resolution incomplete or incorrect.
-- 51–70: Root cause roughly correct but key details missing; resolution partly correct. With artifacts only: config/diff partly match the reference fix → give at least 51.
-- 71–85: Root cause and resolution mostly correct with minor gaps. With artifacts only: config/diff mostly match the reference → give 71–85.
-- 86–100: Root cause and resolution clearly match the reference. With artifacts only: config/diff clearly show the correct fix → give 86–100. Use sparingly.
+Grading criteria:
+- 0: Artifacts do not show the expected change (wrong file, wrong value, or no relevant diff).
+- 51–70: Right file touched but change only partly matches expected (e.g. typo, wrong key). With artifacts only: give at least 51 if the intended fix is visible.
+- 71–85: Artifacts show the expected change in the right file with correct value. Minor formatting/name difference OK.
+- 86–100: Artifacts clearly show the exact expected change. Use sparingly.
 
-Reference answer (Korean):
+Expected change (check this against the participant's git diff / docker-compose / conf.d):
+${ref.expectedChange}
+
+Reference (context only):
 - Root cause: ${ref.rootCause}
 - Resolution: ${ref.resolution}
 
