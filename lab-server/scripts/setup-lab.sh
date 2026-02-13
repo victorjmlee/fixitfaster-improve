@@ -28,6 +28,15 @@ if [ -z "$DATADOG_API_KEY" ] || [ -z "$DATADOG_APP_KEY" ]; then
   exit 1
 fi
 
+if [ -z "$PARTICIPANT_NAME" ]; then
+  echo -n "Participant name (for submissions, saved to ~/.fixitfaster-participant): "
+  read -r PARTICIPANT_NAME
+fi
+if [ -n "$PARTICIPANT_NAME" ]; then
+  printf '%s' "$PARTICIPANT_NAME" > "$HOME/.fixitfaster-participant"
+  echo "Saved participant name to ~/.fixitfaster-participant (used by artifacts script)."
+fi
+
 echo "DATADOG_API_KEY=$DATADOG_API_KEY" > .env.local
 echo "DATADOG_APP_KEY=$DATADOG_APP_KEY" >> .env.local
 echo ".env.local created. Running npm run up:full ..."

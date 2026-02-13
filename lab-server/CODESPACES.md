@@ -4,6 +4,23 @@ Codespaces를 쓰면 **EC2/도메인 없이** 브라우저에서 랩 환경(터�
 
 ---
 
+## Codespace 들어가면 할 일 (체크리스트)
+
+| 순서 | 할 일 |
+|------|--------|
+| **1** | 터미널 열기 (Codespace 아래쪽 터미널 패널). |
+| **2** | **최초 1회:** API Key, App Key, **제출할 이름** 넣고 환경 띄우기. 이름은 `~/.fixitfaster-participant`에 저장되어 artifacts 실행 시 자동 사용. |
+| | **한 줄:** `echo 'DATADOG_API_KEY=본인키' > .env.local && echo 'DATADOG_APP_KEY=본인키' >> .env.local && npm run up:full` · 이름만 따로: `echo '내이름' > ~/.fixitfaster-participant` |
+| | **또는 스크립트:** `curl -sL "https://raw.githubusercontent.com/victorjmlee/fixitfaster/main/lab-server/scripts/setup-lab.sh" -o /tmp/setup-lab.sh && bash /tmp/setup-lab.sh` (API Key, App Key, 이름 입력 프롬프트) |
+| **3** | **Vercel 화면:** Codespace를 열면 Simple Browser가 Vercel URL로 **자동으로** 열릴 수 있음. 안 열리면 Simple Browser(지구본)에 `https://dd-tse-fix-it-faster.vercel.app` 입력. |
+| **4** | **제출 전에:** 터미널에서 artifacts 전송. `CHALLENGE_ID`만 현재 챌린지로 바꿔서 실행 (이름은 2번에서 저장한 값 사용). |
+| | `curl -sL "https://raw.githubusercontent.com/victorjmlee/fixitfaster/main/lab-server/scripts/collect-and-send-artifacts.sh" -o /tmp/send-artifacts.sh && FIXITFASTER_URL="https://dd-tse-fix-it-faster.vercel.app" CHALLENGE_ID="scenario-apm" bash /tmp/send-artifacts.sh` |
+| **5** | Vercel 챌린지 페이지에서 **같은 이름**으로 원인/해결 입력 후 제출. |
+
+**요약:** 1) 터미널에서 키 넣고 `npm run up:full` → 2) Vercel에서 챌린지 풀기 → 3) 제출 **전에** artifacts 스크립트 실행 → 4) 같은 이름으로 제출.
+
+---
+
 ## 1. Codespaces가 뭔지
 
 - **GitHub Codespaces** = GitHub 리포를 클라우드 개발 환경으로 여는 기능.
@@ -19,8 +36,9 @@ Codespaces를 쓰면 **EC2/도메인 없이** 브라우저에서 랩 환경(터�
 2. GitHub 로그인 후 **Create codespace** (기본 머신으로 생성).
    - **처음 생성 시 2~5분** 걸릴 수 있음 (VM + 이미지 + npm ci). 기다리면 됨.
    - 같은 Codespace를 **Resume** 하면 더 빨리 열림.
-3. Codespace가 뜨면 터미널에서 아래 **"Codespace 터미널에서 실행할 명령어"** 블록을 복사한 뒤, `YOUR_API_KEY`, `YOUR_APP_KEY` 만 본인 값으로 바꿔서 실행.
-4. 이후 챌린지 진행하면 됨.
+3. Codespace가 뜨면 **Simple Browser**가 Vercel URL(`https://dd-tse-fix-it-faster.vercel.app`)로 자동으로 열리도록 설정되어 있습니다. 처음 한 번 **"Allow Automatic Tasks in Folder"** 를 묻면 허용하면 됩니다. (안 열리면 Cmd+Shift+P → "Simple Browser: Show" → URL 입력.)
+4. 터미널에서 아래 **"Codespace 터미널에서 실행할 명령어"** 블록을 복사한 뒤, API Key·App Key·이름을 넣어 실행.
+5. 이후 챌린지 진행하면 됨.
 
 ---
 
@@ -77,12 +95,15 @@ git clone https://github.com/CrystalBellSound/fixitfaster-agent.git
 ./fixitfaster/lab-server/setup-codespaces-devcontainer.sh
 ```
 
-**옵션 B – 수동 복사:** 이 리포의 `lab-server/devcontainer-example/` 내용을 **fixitfaster-agent** 리포 루트에 `.devcontainer/` 로 복사합니다.
+**옵션 B – 수동 복사:** 이 리포의 `lab-server/devcontainer-example/` 내용을 **fixitfaster-agent** 리포의 `.devcontainer/` 로 복사합니다. (Simple Browser 자동 열기용 스크립트·템플릿 포함.)
 
 ```bash
 # fixitfaster-agent 클론 후
 mkdir -p fixitfaster-agent/.devcontainer
 cp fixitfaster/lab-server/devcontainer-example/devcontainer.json fixitfaster-agent/.devcontainer/
+cp fixitfaster/lab-server/devcontainer-example/setup-simple-browser-task.sh fixitfaster-agent/.devcontainer/
+cp fixitfaster/lab-server/devcontainer-example/tasks.json.template fixitfaster-agent/.devcontainer/
+chmod +x fixitfaster-agent/.devcontainer/setup-simple-browser-task.sh
 ```
 
 **옵션 B – 직접 생성:** `fixitfaster-agent/.devcontainer/` 폴더를 만들고 아래 내용으로 파일을 만듭니다.
@@ -122,7 +143,7 @@ git commit -m "Add devcontainer for Codespaces"
 git push
 ```
 
-이후 `https://codespaces.new/OWNER/fixitfaster-agent` 로 열면 이 환경으로 뜹니다.
+이후 `https://codespaces.new/OWNER/fixitfaster-agent` 로 열면 이 환경으로 뜹니다. **Codespace를 열 때 Simple Browser가 Vercel URL로 자동 열리도록** `.devcontainer`에 태스크가 포함되어 있습니다(최초 한 번 "자동 작업 허용" 선택 시).
 
 ---
 
@@ -175,10 +196,10 @@ Codespace는 fixitfaster-agent 리포이므로, 스크립트를 먼저 가져와
 
 ```bash
 curl -sL "https://raw.githubusercontent.com/victorjmlee/fixitfaster/main/lab-server/scripts/collect-and-send-artifacts.sh" -o /tmp/send-artifacts.sh
-FIXITFASTER_URL="https://dd-tse-fix-it-faster.vercel.app" CHALLENGE_ID="apm" PARTICIPANT_NAME="MyName" bash /tmp/send-artifacts.sh
+FIXITFASTER_URL="https://dd-tse-fix-it-faster.vercel.app" CHALLENGE_ID="scenario-apm" bash /tmp/send-artifacts.sh
 ```
 
-(위 `FIXITFASTER_URL`, `CHALLENGE_ID`, `PARTICIPANT_NAME` 만 본인 값으로 바꿔서 실행.)
+(`CHALLENGE_ID`만 현재 챌린지로 바꿔서 실행. 참가자 이름은 최초 설정 시 `~/.fixitfaster-participant`에 저장된 값을 사용.)
 
 **방법 B – fixitfaster-agent 에 스크립트를 두고 실행**
 
@@ -186,8 +207,8 @@ fixitfaster-agent 리포에 `scripts/collect-and-send-artifacts.sh` 를 복사�
 
 ```bash
 export FIXITFASTER_URL="https://dd-tse-fix-it-faster.vercel.app"
-export CHALLENGE_ID="apm"
-export PARTICIPANT_NAME="MyName"
+export CHALLENGE_ID="scenario-apm"
+# PARTICIPANT_NAME 생략 시 ~/.fixitfaster-participant 값 사용
 bash scripts/collect-and-send-artifacts.sh
 ```
 

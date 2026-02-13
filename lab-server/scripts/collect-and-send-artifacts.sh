@@ -4,17 +4,22 @@
 #
 # 사용법:
 #   export FIXITFASTER_URL="https://your-app.vercel.app"
-#   export CHALLENGE_ID="apm"   # 챌린지 ID (예: apm, custom-metrics, infra)
-#   export PARTICIPANT_NAME="홍길동"
+#   export CHALLENGE_ID="scenario-apm"   # 현재 챌린지 ID
+#   # PARTICIPANT_NAME 생략 시 ~/.fixitfaster-participant 에 저장된 값 사용 (최초 설정 시 저장)
 #   bash collect-and-send-artifacts.sh
 #
-# 또는 한 줄로:
-#   FIXITFASTER_URL="https://..." CHALLENGE_ID="apm" PARTICIPANT_NAME="홍길동" bash collect-and-send-artifacts.sh
+# 한 줄 예:
+#   FIXITFASTER_URL="https://..." CHALLENGE_ID="scenario-apm" bash collect-and-send-artifacts.sh
 
 set -e
+# 참가자 이름: 환경변수 없으면 최초 설정 시 저장한 ~/.fixitfaster-participant 사용
+if [ -z "$PARTICIPANT_NAME" ] && [ -f "$HOME/.fixitfaster-participant" ]; then
+  PARTICIPANT_NAME=$(head -1 "$HOME/.fixitfaster-participant" | tr -d '\n\r')
+fi
 if [ -z "$FIXITFASTER_URL" ] || [ -z "$CHALLENGE_ID" ] || [ -z "$PARTICIPANT_NAME" ]; then
-  echo "Usage: FIXITFASTER_URL=... CHALLENGE_ID=... PARTICIPANT_NAME=... $0"
-  echo "Example: FIXITFASTER_URL=https://dd-tse-fix-it-faster.vercel.app CHALLENGE_ID=apm PARTICIPANT_NAME=MyName $0"
+  echo "Usage: FIXITFASTER_URL=... CHALLENGE_ID=... [PARTICIPANT_NAME=...] $0"
+  echo "  PARTICIPANT_NAME can be omitted if set at first run (~/.fixitfaster-participant)."
+  echo "Example: FIXITFASTER_URL=https://dd-tse-fix-it-faster.vercel.app CHALLENGE_ID=scenario-apm $0"
   exit 1
 fi
 

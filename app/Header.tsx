@@ -13,26 +13,23 @@ export default function Header() {
           Fix It Faster
         </Link>
         <div className="flex items-center gap-4">
-          <nav className="flex gap-6 text-sm text-zinc-400">
+          <nav className="flex gap-6 text-sm text-white">
             <Link href="/" className="hover:text-white">
               {t("nav.start")}
             </Link>
             <Link href="/challenges" className="hover:text-white">
               {t("nav.challenges")}
             </Link>
-            <Link href="/lab" className="hover:text-white">
-              {t("nav.lab")}
-            </Link>
             <Link href="/leaderboard" className="hover:text-white">
               {t("nav.leaderboard")}
             </Link>
           </nav>
-          <span className="text-zinc-600">|</span>
+          <span className="text-white">|</span>
           <div className="flex rounded border border-[var(--border)] p-0.5 text-sm">
             <button
               type="button"
               onClick={() => setLocale("ko")}
-              className={`rounded px-2.5 py-1 ${locale === "ko" ? "bg-[var(--accent)] text-[var(--bg)]" : "text-zinc-400 hover:text-white"}`}
+              className={`rounded px-2.5 py-1 ${locale === "ko" ? "bg-[var(--accent)] text-[var(--bg)]" : "text-white hover:text-white"}`}
               aria-pressed={locale === "ko"}
             >
               KOR
@@ -40,7 +37,7 @@ export default function Header() {
             <button
               type="button"
               onClick={() => setLocale("en")}
-              className={`rounded px-2.5 py-1 ${locale === "en" ? "bg-[var(--accent)] text-[var(--bg)]" : "text-zinc-400 hover:text-white"}`}
+              className={`rounded px-2.5 py-1 ${locale === "en" ? "bg-[var(--accent)] text-[var(--bg)]" : "text-white hover:text-white"}`}
               aria-pressed={locale === "en"}
             >
               ENG

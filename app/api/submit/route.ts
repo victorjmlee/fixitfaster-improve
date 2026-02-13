@@ -45,11 +45,24 @@ export async function POST(req: Request) {
     });
 
     const artifacts = getAndConsumeArtifacts(submission.challengeId, participantNameTrimmed);
+
+    // 채점은 Codespace에서 보낸 artifacts가 있을 때만 수행
+    if (!artifacts || !artifacts.trim()) {
+      console.log("[submit] No artifacts — grading skipped (Codespace-only)");
+      return NextResponse.json({
+        ...submission,
+        _gradingSkipped: true,
+        _gradingHint:
+          "채점을 받으려면 Codespace 터미널에서 artifacts 스크립트를 먼저 실행한 뒤, 같은 이름으로 제출해 주세요. (랩 → Codespaces 문서 참고)",
+        _gradingReason: "no_artifacts",
+      });
+    }
+
     const grade = await gradeSubmission(
       submission.challengeId,
       submission.causeSummary,
       submission.steps,
-      artifacts ?? undefined
+      artifacts
     );
     if (grade.success) {
       updateSubmission(submission.id, { score: grade.score });

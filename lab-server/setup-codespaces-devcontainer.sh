@@ -22,7 +22,10 @@ fi
 
 mkdir -p "$AGENT_DIR/.devcontainer"
 cp "$SOURCE_JSON" "$AGENT_DIR/.devcontainer/devcontainer.json"
-echo "Done: $AGENT_DIR/.devcontainer/devcontainer.json"
+cp "${SCRIPT_DIR}/devcontainer-example/setup-simple-browser-task.sh" "$AGENT_DIR/.devcontainer/"
+cp "${SCRIPT_DIR}/devcontainer-example/tasks.json.template" "$AGENT_DIR/.devcontainer/"
+chmod +x "$AGENT_DIR/.devcontainer/setup-simple-browser-task.sh"
+echo "Done: $AGENT_DIR/.devcontainer/ (devcontainer.json + Simple Browser auto-open task)"
 
 echo ""
 echo "이제 fixitfaster-agent 리포에서 커밋 & 푸시하세요:"

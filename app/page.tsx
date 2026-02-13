@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useLocale } from "@/app/LocaleContext";
 
 const REPO_URL = "https://github.com/CrystalBellSound/fixitfaster-agent.git";
+const CODESPACES_URL = "https://codespaces.new/CrystalBellSound/fixitfaster-agent";
 
 export default function HomePage() {
   const { locale, t } = useLocale();
@@ -15,12 +16,12 @@ export default function HomePage() {
           Fix It Faster – Agent & Demos
         </h1>
         {locale === "en" ? (
-          <p className="mt-2 text-[var(--muted)]">
-            Datadog Agent + demo containers for the <strong className="text-[var(--text)]">Fix It Faster</strong> hands-on. Use the agent repo to run the agent and scenario demos locally.
+          <p className="mt-2 text-white">
+            Datadog Agent + demo containers for the <strong className="text-white">Fix It Faster</strong> hands-on. Use the agent repo to run the agent and scenario demos in Codespaces.
           </p>
         ) : (
-          <p className="mt-2 text-[var(--muted)]">
-            <strong className="text-[var(--text)]">Fix It Faster</strong> 핸즈온용 Datadog Agent와 데모 컨테이너입니다. 에이전트 저장소로 에이전트와 시나리오 데모를 로컬에서 실행할 수 있습니다.
+          <p className="mt-2 text-white">
+            <strong className="text-white">Fix It Faster</strong> 핸즈온용 Datadog Agent와 데모 컨테이너입니다. Codespaces에서 에이전트와 시나리오 데모를 실행할 수 있습니다.
           </p>
         )}
       </div>
@@ -29,12 +30,12 @@ export default function HomePage() {
         <p className="font-medium text-white">
           {locale === "en" ? "Leaderboard / challenges:" : "리더보드 / 챌린지:"}
         </p>
-        <p className="mt-1 text-sm text-[var(--muted)]">
+        <p className="mt-1 text-sm text-white">
           {locale === "en"
             ? "Submit your solutions at the Fix It Faster leaderboard (this app):"
             : "정답은 Fix It Faster 리더보드(이 앱)에서 제출하세요:"}
         </p>
-        <p className="mt-2 text-sm text-[var(--muted)]">
+        <p className="mt-2 text-sm text-white">
           <Link href="/challenges" className="text-[var(--accent)] hover:underline">{locale === "en" ? "Challenges" : "챌린지"}</Link>
           {" · "}
           <Link href="/leaderboard" className="text-[var(--accent)] hover:underline">{t("nav.leaderboard")}</Link>
@@ -45,29 +46,34 @@ export default function HomePage() {
         <h2 className="text-lg font-semibold text-white mt-8 mb-2">
           {locale === "en" ? "Quick start" : "빠른 시작"}
         </h2>
-        <p className="text-[var(--muted)] text-sm">
-          {locale === "en" ? "1. Clone the repo:" : "1. 저장소 클론:"}
+        <p className="text-white text-sm mb-2">
+          {locale === "en" ? "Start in the browser (recommended):" : "브라우저에서 시작 (권장):"}
         </p>
-        <pre className="mt-2 p-4 rounded-lg bg-[var(--card)] border border-[var(--border)] text-sm overflow-x-auto">
-          <code>{`git clone ${REPO_URL}\ncd fixitfaster-agent`}</code>
-        </pre>
-        <p className="mt-4 text-[var(--muted)] text-sm">
-          {locale === "en"
-            ? "2. Copy .env.example to .env.local and set:"
-            : "2. .env.example을 .env.local로 복사한 뒤 설정:"}
+        <p>
+          <a href={CODESPACES_URL} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-lg border-2 border-[var(--accent)] bg-[var(--accent)]/10 px-4 py-2 text-[var(--accent)] font-medium hover:bg-[var(--accent)]/20">
+            <span aria-hidden>⚡</span>
+            {locale === "en" ? "Open in GitHub Codespaces (Lab)" : "랩 – GitHub Codespaces에서 열기"}
+          </a>
         </p>
-        <ul className="mt-1 text-[var(--muted)] text-sm list-disc pl-5 space-y-0.5">
-          <li><code className="bg-[var(--card)] border border-[var(--border)] rounded px-1.5 py-0.5">DATADOG_API_KEY</code> ({locale === "en" ? "required" : "필수"})</li>
-          <li><code className="bg-[var(--card)] border border-[var(--border)] rounded px-1.5 py-0.5">DATADOG_APP_KEY</code> ({locale === "en" ? "required for log pipeline setup" : "로그 파이프라인 설정 시 필수"})</li>
-        </ul>
-        <p className="mt-4 text-[var(--muted)] text-sm">
-          {locale === "en"
-            ? "3. Start the agent and all demos (including log pipeline setup):"
-            : "3. 에이전트와 모든 데모(로그 파이프라인 설정 포함) 실행:"}
+        <p className="mt-6 text-white text-sm font-medium">
+          {locale === "en" ? "In Codespace, do the following:" : "Codespace에서 할 일:"}
         </p>
-        <pre className="mt-2 p-4 rounded-lg bg-[var(--card)] border border-[var(--border)] text-sm">
-          <code>npm run up:full</code>
-        </pre>
+        <ol className="mt-2 text-white text-sm list-decimal pl-5 space-y-2">
+          <li>
+            {locale === "en" ? "First time only: set API Key, App Key, and your name, then start the lab. Run (replace YOUR_KEY and YourName):" : "최초 1회: API Key, App Key, 제출할 이름을 넣고 랩 실행. 아래 한 줄 실행 (YOUR_KEY·내이름만 바꿔서):"}
+            <pre className="mt-1.5 p-3 rounded-lg bg-[var(--card)] border border-[var(--border)] text-xs overflow-x-auto text-white">
+              <code>{`echo 'DATADOG_API_KEY=YOUR_KEY' > .env.local && echo 'DATADOG_APP_KEY=YOUR_KEY' >> .env.local && echo '내이름' > ~/.fixitfaster-participant && npm run up:full`}</code>
+            </pre>
+          </li>
+          <li>
+            {locale === "en"
+              ? "Before submitting: run the artifacts script in Codespace. Name is read from the file you set at first run. Then submit with the same name on Vercel."
+              : "제출 전: Codespace 터미널에서 아래 명령 실행. 이름은 최초 1회에 저장한 값을 씁니다. 이어서 Vercel에서 같은 이름으로 제출."}
+            <pre className="mt-1.5 p-3 rounded-lg bg-[var(--card)] border border-[var(--border)] text-xs overflow-x-auto text-white">
+              <code>{`curl -sL "https://raw.githubusercontent.com/victorjmlee/fixitfaster/main/lab-server/scripts/collect-and-send-artifacts.sh" -o /tmp/send-artifacts.sh && FIXITFASTER_URL="https://dd-tse-fix-it-faster.vercel.app" CHALLENGE_ID="scenario-apm" bash /tmp/send-artifacts.sh`}</code>
+            </pre>
+          </li>
+        </ol>
       </section>
 
       <section>
@@ -78,11 +84,11 @@ export default function HomePage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-[var(--border)]">
-                <th className="text-left p-3 text-[var(--muted)] font-semibold">{locale === "en" ? "Command" : "명령어"}</th>
-                <th className="text-left p-3 text-[var(--muted)] font-semibold">{locale === "en" ? "Description" : "설명"}</th>
+                <th className="text-left p-3 text-white font-semibold">{locale === "en" ? "Command" : "명령어"}</th>
+                <th className="text-left p-3 text-white font-semibold">{locale === "en" ? "Description" : "설명"}</th>
               </tr>
             </thead>
-            <tbody className="text-[var(--muted)]">
+            <tbody className="text-white">
               <tr className="border-b border-[var(--border)] hover:bg-white/5"><td className="p-3"><code className="bg-[var(--card)] px-1.5 py-0.5 rounded">npm run up</code></td><td className="p-3">{locale === "en" ? "Start Agent + all demo containers (builds if needed)" : "Agent + 모든 데모 컨테이너 시작 (필요 시 빌드)"}</td></tr>
               <tr className="border-b border-[var(--border)] hover:bg-white/5"><td className="p-3"><code className="bg-[var(--card)] px-1.5 py-0.5 rounded">npm run down</code></td><td className="p-3">{locale === "en" ? "Stop and remove all containers" : "모든 컨테이너 중지 및 제거"}</td></tr>
               <tr className="border-b border-[var(--border)] hover:bg-white/5"><td className="p-3"><code className="bg-[var(--card)] px-1.5 py-0.5 rounded">npm run agent:restart</code></td><td className="p-3">{locale === "en" ? "Restart only the Agent container" : "Agent 컨테이너만 재시작"}</td></tr>
@@ -100,12 +106,12 @@ export default function HomePage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-[var(--border)]">
-                <th className="text-left p-3 text-[var(--muted)] font-semibold">{locale === "en" ? "Container" : "컨테이너"}</th>
-                <th className="text-left p-3 text-[var(--muted)] font-semibold">{locale === "en" ? "Image / Build" : "이미지 / 빌드"}</th>
-                <th className="text-left p-3 text-[var(--muted)] font-semibold">{locale === "en" ? "Description" : "설명"}</th>
+                <th className="text-left p-3 text-white font-semibold">{locale === "en" ? "Container" : "컨테이너"}</th>
+                <th className="text-left p-3 text-white font-semibold">{locale === "en" ? "Image / Build" : "이미지 / 빌드"}</th>
+                <th className="text-left p-3 text-white font-semibold">{locale === "en" ? "Description" : "설명"}</th>
               </tr>
             </thead>
-            <tbody className="text-[var(--muted)]">
+            <tbody className="text-white">
               <tr className="border-b border-[var(--border)] hover:bg-white/5"><td className="p-3 font-medium text-white">fixitfaster-agent</td><td className="p-3"><code className="bg-[var(--card)] px-1.5 py-0.5 rounded text-xs">datadog/agent:7</code></td><td className="p-3">{locale === "en" ? "Datadog Agent: APM (8126), Logs, DogStatsD (8125), container discovery. Mounts conf.d/nginx.d/autoconf.yaml for Autodiscovery." : "Datadog Agent: APM(8126), Logs, DogStatsD(8125), 컨테이너 디스커버리. Autodiscovery용 conf.d/nginx.d/autoconf.yaml 마운트."}</td></tr>
               <tr className="border-b border-[var(--border)] hover:bg-white/5"><td className="p-3 font-medium text-white">fixitfaster-trace-demo</td><td className="p-3"><code className="bg-[var(--card)] px-1.5 py-0.5 rounded text-xs">./trace-demo</code></td><td className="p-3">{locale === "en" ? "Sends APM spans every 5s (APM scenario)." : "5초마다 APM 스팬 전송 (APM 시나리오)."}</td></tr>
               <tr className="border-b border-[var(--border)] hover:bg-white/5"><td className="p-3 font-medium text-white">fixitfaster-log-demo</td><td className="p-3"><code className="bg-[var(--card)] px-1.5 py-0.5 rounded text-xs">./log-demo</code></td><td className="p-3">{locale === "en" ? "Logs with Asia/Seoul timestamps every 5s (log timezone / pipeline scenario)." : "5초마다 Asia/Seoul 타임스탬프 로그 (로그 타임존/파이프라인 시나리오)."}</td></tr>
