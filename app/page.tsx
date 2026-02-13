@@ -26,22 +26,6 @@ export default function HomePage() {
         )}
       </div>
 
-      <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-5">
-        <p className="font-medium text-white">
-          {locale === "en" ? "Leaderboard / challenges:" : "리더보드 / 챌린지:"}
-        </p>
-        <p className="mt-1 text-sm text-white">
-          {locale === "en"
-            ? "Submit your solutions at the Fix It Faster leaderboard (this app):"
-            : "정답은 Fix It Faster 리더보드(이 앱)에서 제출하세요:"}
-        </p>
-        <p className="mt-2 text-sm text-white">
-          <Link href="/challenges" className="text-[var(--accent)] hover:underline">{locale === "en" ? "Challenges" : "챌린지"}</Link>
-          {" · "}
-          <Link href="/leaderboard" className="text-[var(--accent)] hover:underline">{t("nav.leaderboard")}</Link>
-        </p>
-      </div>
-
       <section>
         <h2 className="text-lg font-semibold text-white mt-8 mb-2">
           {locale === "en" ? "Quick start" : "빠른 시작"}
