@@ -27,14 +27,20 @@ ${artifacts.slice(0, 15000)}
 `
       : "";
 
-  return `You are a strict grader for a troubleshooting challenge. Compare the participant's answer to the reference and give a score from 0 to 100.
+  const textEmpty = !(causeSummary?.trim() || steps?.trim());
+  const gradeFromArtifactsNote =
+    textEmpty && artifactsBlock
+      ? "\nWhen participant's text answer is empty, grade primarily from the environment changes (artifacts): do the config/diff show the correct fix? Give 0 only if artifacts are missing or clearly wrong.\n"
+      : "";
 
+  return `You are a strict grader for a troubleshooting challenge. Compare the participant's answer to the reference and give a score from 0 to 100.
+${gradeFromArtifactsNote}
 Grading criteria (be strict):
-- 0–25: Wrong or missing root cause; resolution unrelated or absent.
+- 0–25: Wrong or missing root cause; resolution unrelated or absent (or artifacts show wrong/no fix).
 - 26–50: Root cause only vaguely or partially correct; resolution incomplete or incorrect.
-- 51–70: Root cause roughly correct but key details missing; resolution partly correct.
-- 71–85: Root cause and resolution mostly correct with minor gaps.
-- 86–100: Root cause and resolution clearly match the reference (specific terms, steps, and intent). Use sparingly.
+- 51–70: Root cause roughly correct but key details missing; resolution partly correct. With artifacts only: config changes partly match the reference fix.
+- 71–85: Root cause and resolution mostly correct with minor gaps. With artifacts only: config/diff mostly match the reference.
+- 86–100: Root cause and resolution clearly match the reference (specific terms, steps, and intent). With artifacts only: config/diff clearly show the correct fix. Use sparingly.
 
 Reference answer (Korean):
 - Root cause: ${ref.rootCause}
