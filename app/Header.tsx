@@ -20,6 +20,9 @@ export default function Header() {
             <Link href="/challenges" className="hover:text-white">
               {t("nav.challenges")}
             </Link>
+            <Link href="/lab" className="hover:text-white">
+              {t("nav.lab")}
+            </Link>
             <Link href="/leaderboard" className="hover:text-white">
               {t("nav.leaderboard")}
             </Link>
