@@ -172,36 +172,27 @@ async function callGemini(
 }
 
 /**
- * artifacts만 있을 때 서버에서 패턴으로 채점. 통과하면 75점 (Gemini 호출 안 함).
+ * artifacts만 있을 때 정답지(artifactCheck)로 채점. 조건 하나라도 만족하면 점수 부여 (Gemini 호출 안 함).
  */
-function gradeFromArtifactPatterns(challengeId: string, artifacts: string): number | null {
+function gradeFromArtifactPatterns(
+  challengeId: string,
+  artifacts: string,
+  ref: { artifactCheck?: string[][]; artifactScore?: number }
+): number | null {
+  const check = ref?.artifactCheck;
+  if (!check?.length) return null;
+
   const a = artifacts.toLowerCase();
-  switch (challengeId) {
-    case "scenario-infra":
-      if ((a.includes("docker-compose") || a.includes("docker_compose")) && a.includes("fixitfaster-agent") && (a.includes("hostname") || a.includes("dd_hostname")))
-        return 75;
-      break;
-    case "scenario-autodiscovery":
-      if (a.includes("conf.d") && a.includes("nginx") && a.includes("ad_identifiers") && a.includes("nginx"))
-        return 75;
-      break;
-    case "scenario-apm":
-      if (a.includes("trace-demo") && (a.includes("8126") || a.includes("port")))
-        return 75;
-      break;
-    case "scenario-correlation":
-      if (a.includes("docker-compose") && a.includes("correlation") && (a.includes("dd_logs_injection") || a.includes("logs_injection")) && a.includes("true"))
-        return 75;
-      break;
-    case "scenario-custom-metrics":
-      if (a.includes("metrics-demo") && (a.includes("agent") || a.includes("host")) && !a.includes("127.0.0.1"))
-        return 75;
-      break;
-    case "scenario-log-timezone":
-      if (a.includes("pipeline") || a.includes("asia/seoul") || a.includes("timezone") || a.includes("date remapper") || a.includes("log-demo"))
-        return 65;
-      break;
+  for (const condition of check) {
+    if (condition.length === 0) continue;
+    const allPresent = condition.every((s) => a.includes(s.toLowerCase()));
+    if (allPresent) {
+      const score = ref.artifactScore ?? 75;
+      console.log("[grade] Artifact check pass challengeId=%s condition=%s score=%d", challengeId, condition.join(","), score);
+      return score;
+    }
   }
+  console.log("[grade] Artifact check miss challengeId=%s artifactLen=%d sample=%s", challengeId, artifacts.length, artifacts.slice(0, 400).replace(/\n/g, " "));
   return null;
 }
 
@@ -221,11 +212,8 @@ export async function gradeSubmission(
 
   const textEmpty = !(causeSummary?.trim() || steps?.trim());
   if (textEmpty && artifacts?.trim()) {
-    const patternScore = gradeFromArtifactPatterns(challengeId, artifacts);
-    if (patternScore != null) {
-      console.log("[grade] Artifact pattern match, score=" + patternScore + " (Gemini skipped)");
-      return { success: true, score: patternScore };
-    }
+    const patternScore = gradeFromArtifactPatterns(challengeId, artifacts, ref);
+    if (patternScore != null) return { success: true, score: patternScore };
   }
 
   const prompt = buildPrompt(ref, causeSummary, steps, artifacts);
@@ -267,6 +255,10 @@ export async function gradeSubmission(
     return { success: false, reason: firstStatus === 429 ? "quota" : "api_error" };
   }
 
-  const { score, feedback } = parseScoreFromText(text);
+  let { score, feedback } = parseScoreFromText(text);
+  if (textEmpty && artifacts?.trim() && score === 0) {
+    console.log("[grade] Gemini returned 0 but artifacts present; overriding to 60");
+    score = 60;
+  }
   return { success: true, score, feedback };
 }
