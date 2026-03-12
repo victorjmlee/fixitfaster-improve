@@ -19,6 +19,9 @@ export type Challenge = ChallengeMeta & {
 };
 
 const CHALLENGES_DIR = path.join(process.cwd(), "challenges");
+const EXTRA_CHALLENGES_DIR = process.env.VERCEL
+  ? path.join("/tmp", "challenges")
+  : null;
 
 const CHALLENGE_ORDER = [
   "scenario-infra",
@@ -100,6 +103,25 @@ export function listChallenges(): ChallengeMeta[] {
   });
   // Append AI-generated (non-ordered) challenges after the ordered ones
   const extra = list.filter((c) => !CHALLENGE_ORDER.includes(c.id));
+
+  // On Vercel, also read challenges from /tmp/challenges (writable dir)
+  if (EXTRA_CHALLENGES_DIR && fs.existsSync(EXTRA_CHALLENGES_DIR)) {
+    try {
+      const tmpFiles = fs.readdirSync(EXTRA_CHALLENGES_DIR);
+      const knownIds = new Set([...ordered, ...extra].map((c) => c.id));
+      for (const f of tmpFiles) {
+        if (!f.endsWith(".md") || f.startsWith("_")) continue;
+        const id = f.replace(/\.md$/, "");
+        if (knownIds.has(id)) continue;
+        try {
+          const raw = fs.readFileSync(path.join(EXTRA_CHALLENGES_DIR, f), "utf-8");
+          const c = parseChallenge(id, raw);
+          extra.push({ id: c.id, title: c.title, difficulty: c.difficulty, estimatedMinutes: c.estimatedMinutes, products: c.products });
+        } catch { /* skip */ }
+      }
+    } catch { /* skip */ }
+  }
+
   return [...ordered, ...extra];
 }
 
@@ -111,6 +133,17 @@ export function getChallenge(id: string, locale: ChallengeLocale = "en"): Challe
   if (locale === "ko") {
     const koPath = path.join(CHALLENGES_DIR, "ko", `${safeId}.md`);
     if (fs.existsSync(koPath)) filePath = koPath;
+  }
+  // Fallback to /tmp/challenges on Vercel
+  if (!fs.existsSync(filePath) && EXTRA_CHALLENGES_DIR) {
+    const tmpPath = path.join(EXTRA_CHALLENGES_DIR, `${safeId}.md`);
+    if (locale === "ko") {
+      const tmpKo = path.join(EXTRA_CHALLENGES_DIR, "ko", `${safeId}.md`);
+      if (fs.existsSync(tmpKo)) filePath = tmpKo;
+      else if (fs.existsSync(tmpPath)) filePath = tmpPath;
+    } else if (fs.existsSync(tmpPath)) {
+      filePath = tmpPath;
+    }
   }
   if (!fs.existsSync(filePath)) return null;
   const raw = fs.readFileSync(filePath, "utf-8");

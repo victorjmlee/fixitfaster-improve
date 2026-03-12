@@ -25,17 +25,24 @@ function promoteToLive(draft: {
   markdownKo?: string;
   referenceAnswer: Parameters<typeof saveCustomReferenceAnswer>[1];
 }) {
-  const challengesDir = path.join(process.cwd(), "challenges");
-  const filePath = path.join(challengesDir, `${draft.scenarioId}.md`);
+  // Vercel: /var/task is read-only, write to /tmp/challenges
+  const writableDir = process.env.VERCEL
+    ? path.join("/tmp", "challenges")
+    : path.join(process.cwd(), "challenges");
 
-  if (fs.existsSync(filePath)) {
+  if (!fs.existsSync(writableDir)) fs.mkdirSync(writableDir, { recursive: true });
+  const filePath = path.join(writableDir, `${draft.scenarioId}.md`);
+
+  // Check both original and writable dirs
+  const originalPath = path.join(process.cwd(), "challenges", `${draft.scenarioId}.md`);
+  if (fs.existsSync(originalPath) || fs.existsSync(filePath)) {
     return { ok: false, error: `${draft.scenarioId}.md already exists` };
   }
 
   fs.writeFileSync(filePath, draft.markdown, "utf-8");
 
   if (draft.markdownKo) {
-    const koDir = path.join(challengesDir, "ko");
+    const koDir = path.join(writableDir, "ko");
     if (!fs.existsSync(koDir)) fs.mkdirSync(koDir, { recursive: true });
     fs.writeFileSync(path.join(koDir, `${draft.scenarioId}.md`), draft.markdownKo, "utf-8");
   }

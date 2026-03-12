@@ -22,7 +22,9 @@ export type ChallengeDraft = {
   generationNotes?: string;
 };
 
-const DATA_DIR = path.join(process.cwd(), "data");
+const DATA_DIR = process.env.VERCEL
+  ? path.join("/tmp", "data")
+  : path.join(process.cwd(), "data");
 const DRAFTS_FILE = path.join(DATA_DIR, "drafts.json");
 
 let memoryFallback: ChallengeDraft[] | null = null;

@@ -112,7 +112,9 @@ export const REFERENCE_ANSWERS: Record<
 import fs from "fs";
 import path from "path";
 
-const CUSTOM_REF_FILE = path.join(process.cwd(), "data", "custom-reference-answers.json");
+const CUSTOM_REF_FILE = process.env.VERCEL
+  ? path.join("/tmp", "data", "custom-reference-answers.json")
+  : path.join(process.cwd(), "data", "custom-reference-answers.json");
 
 type RefAnswer = (typeof REFERENCE_ANSWERS)[string];
 
