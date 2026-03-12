@@ -5,7 +5,7 @@ import {
   addSubmission,
 } from "@/lib/store";
 import { gradeSolutionOnly } from "@/lib/gemini-grade";
-import { REFERENCE_ANSWERS } from "@/lib/reference-answers";
+import { getAllReferenceAnswers } from "@/lib/reference-answers";
 
 /** 기존 제출에 솔루션(원인/해결) 추가 + 솔루션 0~20점 채점 후 합산 반영 */
 export async function POST(req: Request) {
@@ -26,7 +26,7 @@ export async function POST(req: Request) {
 
     // 솔루션 전용 시나리오(보너스)는 터미널 제출 없이도 제출 가능 — 자동 생성
     if (!submission) {
-      const ref = REFERENCE_ANSWERS[cid];
+      const ref = getAllReferenceAnswers()[cid];
       const isSolutionOnly = ref && (!ref.artifactCheck || ref.artifactCheck.length === 0);
       if (!isSolutionOnly) {
         return NextResponse.json(

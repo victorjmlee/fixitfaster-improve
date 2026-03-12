@@ -5,6 +5,9 @@ out
 .env.local
 .env.*.local
 data/submissions.json
+data/drafts.json
+data/custom-reference-answers.json
+data/artifacts.json
 .DS_Store
 *.pem
 

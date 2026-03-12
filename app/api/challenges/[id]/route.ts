@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getChallenge, type ChallengeLocale } from "@/lib/challenges";
-import { REFERENCE_ANSWERS } from "@/lib/reference-answers";
+import { getAllReferenceAnswers } from "@/lib/reference-answers";
 
 export async function GET(
   req: Request,
@@ -13,7 +13,7 @@ export async function GET(
   if (!challenge) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
-  const ref = REFERENCE_ANSWERS[id];
+  const ref = getAllReferenceAnswers()[id];
   const scoreGuide = ref?.scoreGuide ? ref.scoreGuide[locale] ?? ref.scoreGuide.ko : undefined;
   const artifactScore = ref?.artifactScore;
   return NextResponse.json({

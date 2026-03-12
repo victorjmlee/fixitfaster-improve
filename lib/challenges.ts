@@ -98,7 +98,9 @@ export function listChallenges(): ChallengeMeta[] {
     const ib = CHALLENGE_ORDER.indexOf(b.id);
     return ia - ib;
   });
-  return ordered;
+  // Append AI-generated (non-ordered) challenges after the ordered ones
+  const extra = list.filter((c) => !CHALLENGE_ORDER.includes(c.id));
+  return [...ordered, ...extra];
 }
 
 export type ChallengeLocale = "en" | "ko";

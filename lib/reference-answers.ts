@@ -107,3 +107,34 @@ export const REFERENCE_ANSWERS: Record<
     },
   },
 };
+
+// --- Custom reference answers (AI-generated, promoted drafts) ---
+import fs from "fs";
+import path from "path";
+
+const CUSTOM_REF_FILE = path.join(process.cwd(), "data", "custom-reference-answers.json");
+
+type RefAnswer = (typeof REFERENCE_ANSWERS)[string];
+
+function loadCustomReferenceAnswers(): Record<string, RefAnswer> {
+  try {
+    if (!fs.existsSync(CUSTOM_REF_FILE)) return {};
+    const raw = fs.readFileSync(CUSTOM_REF_FILE, "utf-8");
+    return JSON.parse(raw);
+  } catch {
+    return {};
+  }
+}
+
+/** Hardcoded + custom (AI-generated) reference answers merged. */
+export function getAllReferenceAnswers(): Record<string, RefAnswer> {
+  return { ...REFERENCE_ANSWERS, ...loadCustomReferenceAnswers() };
+}
+
+export function saveCustomReferenceAnswer(scenarioId: string, answer: RefAnswer) {
+  const custom = loadCustomReferenceAnswers();
+  custom[scenarioId] = answer;
+  const dir = path.dirname(CUSTOM_REF_FILE);
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(CUSTOM_REF_FILE, JSON.stringify(custom, null, 2), "utf-8");
+}

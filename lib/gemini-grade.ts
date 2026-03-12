@@ -1,4 +1,4 @@
-import { REFERENCE_ANSWERS } from "./reference-answers";
+import { getAllReferenceAnswers } from "./reference-answers";
 
 const GEMINI_MODEL_IDS = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.0-pro", "gemini-pro"];
 
@@ -196,7 +196,7 @@ export async function gradeSubmission(
   steps: string,
   artifacts?: string | null
 ): Promise<GradeOutcome> {
-  const ref = REFERENCE_ANSWERS[challengeId];
+  const ref = getAllReferenceAnswers()[challengeId];
   if (!ref) return { success: false, reason: "no_ref" };
 
   const textEmpty = !(causeSummary?.trim() || steps?.trim());
@@ -258,7 +258,7 @@ export async function gradeSolutionOnly(
   causeSummary: string,
   steps: string
 ): Promise<GradeOutcome> {
-  const ref = REFERENCE_ANSWERS[challengeId];
+  const ref = getAllReferenceAnswers()[challengeId];
   if (!ref) return { success: false, reason: "no_ref" };
   if (!(causeSummary?.trim() || steps?.trim())) {
     return { success: true, score: 0 };
