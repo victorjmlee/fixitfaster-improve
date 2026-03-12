@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import { getKv } from "./kv";
 
 export type ChallengeMeta = {
   id: string;
@@ -19,9 +20,6 @@ export type Challenge = ChallengeMeta & {
 };
 
 const CHALLENGES_DIR = path.join(process.cwd(), "challenges");
-const EXTRA_CHALLENGES_DIR = process.env.VERCEL
-  ? path.join("/tmp", "challenges")
-  : null;
 
 const CHALLENGE_ORDER = [
   "scenario-infra",
@@ -31,6 +29,8 @@ const CHALLENGE_ORDER = [
   "scenario-custom-metrics",
   "scenario-log-timezone",
 ];
+
+const KV_CHALLENGE_PREFIX = "challenge:md:";
 
 function extractSection(content: string, title: string): string {
   const regex = new RegExp(`## ${title}\\s*\\n([\\s\\S]*?)(?=\\n## |$)`, "i");
@@ -54,25 +54,69 @@ function parseChallenge(id: string, raw: string): Challenge {
   const allowedResources = extractSection(raw, "Allowed resources");
   const helpfulCommands = extractSection(raw, "Helpful Commands");
   return {
-    id,
-    title,
-    difficulty,
-    estimatedMinutes,
-    products,
-    body,
-    symptomSummary,
-    environment,
-    steps,
-    allowedResources,
-    helpfulCommands,
+    id, title, difficulty, estimatedMinutes, products,
+    body, symptomSummary, environment, steps, allowedResources, helpfulCommands,
   };
 }
 
+/** Save promoted challenge markdown to KV */
+export async function saveChallengeMd(scenarioId: string, markdown: string, locale: "en" | "ko" = "en") {
+  const kv = await getKv();
+  if (kv) {
+    const suffix = locale === "ko" ? `:${locale}` : "";
+    await kv.set(`${KV_CHALLENGE_PREFIX}${scenarioId}${suffix}`, markdown);
+    // Also save to index so we can list them
+    const indexRaw = await kv.get("admin:challenge-index");
+    const index: string[] = indexRaw
+      ? (typeof indexRaw === "string" ? JSON.parse(indexRaw) : indexRaw as string[])
+      : [];
+    if (!index.includes(scenarioId)) {
+      index.push(scenarioId);
+      await kv.set("admin:challenge-index", JSON.stringify(index));
+    }
+    return;
+  }
+  // File fallback
+  const dir = locale === "ko" ? path.join(CHALLENGES_DIR, "ko") : CHALLENGES_DIR;
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(path.join(dir, `${scenarioId}.md`), markdown, "utf-8");
+}
+
+/** List challenges: filesystem + KV promoted ones */
+export async function listChallengesAsync(): Promise<ChallengeMeta[]> {
+  const list = listChallengesFromFiles();
+
+  // Also load KV-stored challenges
+  const kv = await getKv();
+  if (kv) {
+    const indexRaw = await kv.get("admin:challenge-index");
+    const index: string[] = indexRaw
+      ? (typeof indexRaw === "string" ? JSON.parse(indexRaw) : indexRaw as string[])
+      : [];
+    const knownIds = new Set(list.map((c) => c.id));
+    for (const id of index) {
+      if (knownIds.has(id)) continue;
+      const raw = await kv.get(`${KV_CHALLENGE_PREFIX}${id}`);
+      if (!raw || typeof raw !== "string") continue;
+      try {
+        const c = parseChallenge(id, raw);
+        list.push({ id: c.id, title: c.title, difficulty: c.difficulty, estimatedMinutes: c.estimatedMinutes, products: c.products });
+      } catch { /* skip */ }
+    }
+  }
+
+  return list;
+}
+
+/** Sync version: only reads filesystem (used by generate-challenge for examples) */
 export function listChallenges(): ChallengeMeta[] {
+  return listChallengesFromFiles();
+}
+
+function listChallengesFromFiles(): ChallengeMeta[] {
   if (!fs.existsSync(CHALLENGES_DIR)) return [];
   let files: string[];
   try {
-    if (!fs.existsSync(CHALLENGES_DIR)) return [];
     files = fs.readdirSync(CHALLENGES_DIR);
   } catch {
     return [];
@@ -84,66 +128,45 @@ export function listChallenges(): ChallengeMeta[] {
     try {
       const raw = fs.readFileSync(path.join(CHALLENGES_DIR, f), "utf-8");
       const c = parseChallenge(id, raw);
-      list.push({
-        id: c.id,
-        title: c.title,
-        difficulty: c.difficulty,
-        estimatedMinutes: c.estimatedMinutes,
-        products: c.products,
-      });
-    } catch {
-      // skip invalid
-    }
-  }
-  const ordered = list.filter((c) => CHALLENGE_ORDER.includes(c.id));
-  ordered.sort((a, b) => {
-    const ia = CHALLENGE_ORDER.indexOf(a.id);
-    const ib = CHALLENGE_ORDER.indexOf(b.id);
-    return ia - ib;
-  });
-  // Append AI-generated (non-ordered) challenges after the ordered ones
-  const extra = list.filter((c) => !CHALLENGE_ORDER.includes(c.id));
-
-  // On Vercel, also read challenges from /tmp/challenges (writable dir)
-  if (EXTRA_CHALLENGES_DIR && fs.existsSync(EXTRA_CHALLENGES_DIR)) {
-    try {
-      const tmpFiles = fs.readdirSync(EXTRA_CHALLENGES_DIR);
-      const knownIds = new Set([...ordered, ...extra].map((c) => c.id));
-      for (const f of tmpFiles) {
-        if (!f.endsWith(".md") || f.startsWith("_")) continue;
-        const id = f.replace(/\.md$/, "");
-        if (knownIds.has(id)) continue;
-        try {
-          const raw = fs.readFileSync(path.join(EXTRA_CHALLENGES_DIR, f), "utf-8");
-          const c = parseChallenge(id, raw);
-          extra.push({ id: c.id, title: c.title, difficulty: c.difficulty, estimatedMinutes: c.estimatedMinutes, products: c.products });
-        } catch { /* skip */ }
-      }
+      list.push({ id: c.id, title: c.title, difficulty: c.difficulty, estimatedMinutes: c.estimatedMinutes, products: c.products });
     } catch { /* skip */ }
   }
-
+  const ordered = list.filter((c) => CHALLENGE_ORDER.includes(c.id));
+  ordered.sort((a, b) => CHALLENGE_ORDER.indexOf(a.id) - CHALLENGE_ORDER.indexOf(b.id));
+  const extra = list.filter((c) => !CHALLENGE_ORDER.includes(c.id));
   return [...ordered, ...extra];
 }
 
 export type ChallengeLocale = "en" | "ko";
 
+/** Get a single challenge by id (filesystem + KV fallback) */
+export async function getChallengeAsync(id: string, locale: ChallengeLocale = "en"): Promise<Challenge | null> {
+  // Try filesystem first
+  const fromFile = getChallenge(id, locale);
+  if (fromFile) return fromFile;
+
+  // Fallback to KV
+  const kv = await getKv();
+  if (!kv) return null;
+  const safeId = path.basename(id).replace(/\.md$/, "");
+  let raw: string | null = null;
+  if (locale === "ko") {
+    raw = await kv.get(`${KV_CHALLENGE_PREFIX}${safeId}:ko`);
+  }
+  if (!raw) {
+    raw = await kv.get(`${KV_CHALLENGE_PREFIX}${safeId}`);
+  }
+  if (!raw || typeof raw !== "string") return null;
+  return parseChallenge(safeId, raw);
+}
+
+/** Sync version: filesystem only */
 export function getChallenge(id: string, locale: ChallengeLocale = "en"): Challenge | null {
   const safeId = path.basename(id).replace(/\.md$/, "");
   let filePath = path.join(CHALLENGES_DIR, `${safeId}.md`);
   if (locale === "ko") {
     const koPath = path.join(CHALLENGES_DIR, "ko", `${safeId}.md`);
     if (fs.existsSync(koPath)) filePath = koPath;
-  }
-  // Fallback to /tmp/challenges on Vercel
-  if (!fs.existsSync(filePath) && EXTRA_CHALLENGES_DIR) {
-    const tmpPath = path.join(EXTRA_CHALLENGES_DIR, `${safeId}.md`);
-    if (locale === "ko") {
-      const tmpKo = path.join(EXTRA_CHALLENGES_DIR, "ko", `${safeId}.md`);
-      if (fs.existsSync(tmpKo)) filePath = tmpKo;
-      else if (fs.existsSync(tmpPath)) filePath = tmpPath;
-    } else if (fs.existsSync(tmpPath)) {
-      filePath = tmpPath;
-    }
   }
   if (!fs.existsSync(filePath)) return null;
   const raw = fs.readFileSync(filePath, "utf-8");

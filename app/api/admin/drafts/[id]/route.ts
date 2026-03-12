@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import fs from "fs";
-import path from "path";
 import { checkAdminSecret } from "@/lib/admin-auth";
 import { getDraft, updateDraft, deleteDraft } from "@/lib/draft-store";
 import { saveCustomReferenceAnswer } from "@/lib/reference-answers";
+import { saveChallengeMd, getChallengeAsync } from "@/lib/challenges";
 
 export async function GET(
   req: NextRequest,
@@ -13,41 +12,29 @@ export async function GET(
   if (authErr) return authErr;
 
   const { id } = await params;
-  const draft = getDraft(id);
+  const draft = await getDraft(id);
   if (!draft) return NextResponse.json({ error: "Not found" }, { status: 404 });
   return NextResponse.json(draft);
 }
 
-/** Approve → auto-promote: write challenge markdown + reference answer */
-function promoteToLive(draft: {
+/** Approve → auto-promote: save challenge markdown + reference answer to KV */
+async function promoteToLive(draft: {
   scenarioId: string;
   markdown: string;
   markdownKo?: string;
   referenceAnswer: Parameters<typeof saveCustomReferenceAnswer>[1];
 }) {
-  // Vercel: /var/task is read-only, write to /tmp/challenges
-  const writableDir = process.env.VERCEL
-    ? path.join("/tmp", "challenges")
-    : path.join(process.cwd(), "challenges");
-
-  if (!fs.existsSync(writableDir)) fs.mkdirSync(writableDir, { recursive: true });
-  const filePath = path.join(writableDir, `${draft.scenarioId}.md`);
-
-  // Check both original and writable dirs
-  const originalPath = path.join(process.cwd(), "challenges", `${draft.scenarioId}.md`);
-  if (fs.existsSync(originalPath) || fs.existsSync(filePath)) {
-    return { ok: false, error: `${draft.scenarioId}.md already exists` };
+  // Check if challenge already exists (filesystem or KV)
+  const existing = await getChallengeAsync(draft.scenarioId);
+  if (existing) {
+    return { ok: false, error: `${draft.scenarioId} already exists` };
   }
 
-  fs.writeFileSync(filePath, draft.markdown, "utf-8");
-
+  await saveChallengeMd(draft.scenarioId, draft.markdown);
   if (draft.markdownKo) {
-    const koDir = path.join(writableDir, "ko");
-    if (!fs.existsSync(koDir)) fs.mkdirSync(koDir, { recursive: true });
-    fs.writeFileSync(path.join(koDir, `${draft.scenarioId}.md`), draft.markdownKo, "utf-8");
+    await saveChallengeMd(draft.scenarioId, draft.markdownKo, "ko");
   }
-
-  saveCustomReferenceAnswer(draft.scenarioId, draft.referenceAnswer);
+  await saveCustomReferenceAnswer(draft.scenarioId, draft.referenceAnswer);
   return { ok: true };
 }
 
@@ -63,15 +50,15 @@ export async function PATCH(
 
   // Auto-promote when approving
   if (body.status === "approved") {
-    const draft = getDraft(id);
+    const draft = await getDraft(id);
     if (!draft) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-    const result = promoteToLive(draft);
+    const result = await promoteToLive(draft);
     if (!result.ok) {
       return NextResponse.json({ error: result.error }, { status: 409 });
     }
 
-    const updated = updateDraft(id, {
+    const updated = await updateDraft(id, {
       status: "approved",
       reviewedAt: new Date().toISOString(),
       generationNotes: `Auto-promoted at ${new Date().toISOString()}`,
@@ -80,7 +67,7 @@ export async function PATCH(
   }
 
   const patch = { ...body, reviewedAt: new Date().toISOString() };
-  const updated = updateDraft(id, patch);
+  const updated = await updateDraft(id, patch);
   if (!updated)
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   return NextResponse.json(updated);
@@ -94,7 +81,7 @@ export async function DELETE(
   if (authErr) return authErr;
 
   const { id } = await params;
-  const ok = deleteDraft(id);
+  const ok = await deleteDraft(id);
   if (!ok) return NextResponse.json({ error: "Not found" }, { status: 404 });
   return NextResponse.json({ success: true });
 }

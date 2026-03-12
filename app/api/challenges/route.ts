@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { listChallenges } from "@/lib/challenges";
+import { listChallengesAsync } from "@/lib/challenges";
 
 export async function GET() {
-  const list = listChallenges();
+  const list = await listChallengesAsync();
   return NextResponse.json(list);
 }

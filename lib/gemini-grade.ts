@@ -196,7 +196,7 @@ export async function gradeSubmission(
   steps: string,
   artifacts?: string | null
 ): Promise<GradeOutcome> {
-  const ref = getAllReferenceAnswers()[challengeId];
+  const ref = (await getAllReferenceAnswers())[challengeId];
   if (!ref) return { success: false, reason: "no_ref" };
 
   const textEmpty = !(causeSummary?.trim() || steps?.trim());
@@ -258,7 +258,7 @@ export async function gradeSolutionOnly(
   causeSummary: string,
   steps: string
 ): Promise<GradeOutcome> {
-  const ref = getAllReferenceAnswers()[challengeId];
+  const ref = (await getAllReferenceAnswers())[challengeId];
   if (!ref) return { success: false, reason: "no_ref" };
   if (!(causeSummary?.trim() || steps?.trim())) {
     return { success: true, score: 0 };

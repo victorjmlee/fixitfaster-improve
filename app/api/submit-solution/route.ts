@@ -26,7 +26,7 @@ export async function POST(req: Request) {
 
     // 솔루션 전용 시나리오(보너스)는 터미널 제출 없이도 제출 가능 — 자동 생성
     if (!submission) {
-      const ref = getAllReferenceAnswers()[cid];
+      const ref = (await getAllReferenceAnswers())[cid];
       const isSolutionOnly = ref && (!ref.artifactCheck || ref.artifactCheck.length === 0);
       if (!isSolutionOnly) {
         return NextResponse.json(

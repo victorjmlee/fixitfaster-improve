@@ -7,5 +7,5 @@ export async function GET(req: NextRequest) {
   if (authErr) return authErr;
 
   const status = new URL(req.url).searchParams.get("status") ?? undefined;
-  return NextResponse.json(listDrafts(status));
+  return NextResponse.json(await listDrafts(status));
 }

@@ -111,31 +111,49 @@ export const REFERENCE_ANSWERS: Record<
 // --- Custom reference answers (AI-generated, promoted drafts) ---
 import fs from "fs";
 import path from "path";
+import { getKv } from "./kv";
 
-const CUSTOM_REF_FILE = process.env.VERCEL
-  ? path.join("/tmp", "data", "custom-reference-answers.json")
-  : path.join(process.cwd(), "data", "custom-reference-answers.json");
+const CUSTOM_REF_FILE = path.join(process.cwd(), "data", "custom-reference-answers.json");
+const KV_CUSTOM_REF_KEY = "admin:custom-reference-answers";
 
 type RefAnswer = (typeof REFERENCE_ANSWERS)[string];
 
-function loadCustomReferenceAnswers(): Record<string, RefAnswer> {
+function loadCustomReferenceAnswersFile(): Record<string, RefAnswer> {
   try {
     if (!fs.existsSync(CUSTOM_REF_FILE)) return {};
-    const raw = fs.readFileSync(CUSTOM_REF_FILE, "utf-8");
-    return JSON.parse(raw);
+    return JSON.parse(fs.readFileSync(CUSTOM_REF_FILE, "utf-8"));
   } catch {
     return {};
   }
 }
 
-/** Hardcoded + custom (AI-generated) reference answers merged. */
-export function getAllReferenceAnswers(): Record<string, RefAnswer> {
-  return { ...REFERENCE_ANSWERS, ...loadCustomReferenceAnswers() };
+async function loadCustomReferenceAnswers(): Promise<Record<string, RefAnswer>> {
+  const kv = await getKv();
+  if (kv) {
+    const raw = await kv.get(KV_CUSTOM_REF_KEY);
+    if (!raw) return {};
+    try {
+      return typeof raw === "string" ? JSON.parse(raw) : raw as Record<string, RefAnswer>;
+    } catch {
+      return {};
+    }
+  }
+  return loadCustomReferenceAnswersFile();
 }
 
-export function saveCustomReferenceAnswer(scenarioId: string, answer: RefAnswer) {
-  const custom = loadCustomReferenceAnswers();
+/** Hardcoded + custom (AI-generated) reference answers merged. */
+export async function getAllReferenceAnswers(): Promise<Record<string, RefAnswer>> {
+  return { ...REFERENCE_ANSWERS, ...await loadCustomReferenceAnswers() };
+}
+
+export async function saveCustomReferenceAnswer(scenarioId: string, answer: RefAnswer) {
+  const custom = await loadCustomReferenceAnswers();
   custom[scenarioId] = answer;
+  const kv = await getKv();
+  if (kv) {
+    await kv.set(KV_CUSTOM_REF_KEY, JSON.stringify(custom));
+    return;
+  }
   const dir = path.dirname(CUSTOM_REF_FILE);
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
   fs.writeFileSync(CUSTOM_REF_FILE, JSON.stringify(custom, null, 2), "utf-8");

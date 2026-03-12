@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
 
     const result = await generateChallengeDraft(topic);
 
-    const draft = addDraft({
+    const draft = await addDraft({
       status: "pending",
       scenarioId: result.scenarioId,
       markdown: result.markdown,
